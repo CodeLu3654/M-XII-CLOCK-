@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MΣXII CLOCK and Calendar</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            flex-direction: column;
+            color: #efe;
+        }
+        #clock {
+            font-size: 2em;
+            background: #012;
+            color: #efe;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+            text-align: center;
+            width: fit-content;
+        }
+        .calendar {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto; /* Enable horizontal scrolling on small screens */
+            margin-bottom: 20px;
+        }
+        table {
+            width: auto; /* Adjust width dynamically based on content */
+            border-collapse: collapse;
+            font-size: 14px; /* Adjust font size for smaller screens */
+        }
+        table, th, td {
+            border: 1px solid black;
+            text-align: center;
+            padding: 8px; /* Reduce padding for smaller cells */
+        }
+        th {
+            background-color: #012;
+            color: #fff;
+        }
+        .highlight {
+            background-color: #0000;
+        }
+        .highlight-black {
+            background-color: purple;
+            color: white;
+        }
+        #calendar-title {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        #energy-bar-container {
+            width: 90%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        #energy-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            border-radius: 5px;
+            transition: width 1s ease-in-out;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            table {
+                font-size: 12px; /* Further adjust font size for very small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="clock">00:00:000 M.L</div>
+
+    <!-- MΣXII 13 Calendar -->
+    <h2 id="calendar-title">MΣXII 13 month calendar - July 2024</h2>
+    <div class="calendar">
+        <table id="mexii-calendar">
+            <tr>
+                <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+            </tr>
+            <!-- Example rows, adjust as per your calendar -->
+            <tr>
+                <td>1</td><td>2</td><td>3</td><td>4 Independence Day</td><td>5</td><td>6</td><td>7</td>
+            </tr>
+            <tr>
+                <td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td class="highlight">13</td><td>14</td>
+            </tr>
+            <tr>
+                <td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td>
+            </tr>
+            <tr>
+                <td>22</td><td>23 Unity Day II</td><td>24</td><td>25</td><td>26</td><td>27</td><td>28</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Energy Bar -->
+    <div id="energy-bar-container">
+        <div id="energy-bar">0%</div>
+    </div>
+
+    <script>
+        function updateMEXIIClock() {
+            const now = new Date();
+
+            // Adjust for the clock being 60 hours behind and losing an hour each day
+            const totalConventionalSeconds = now.getTime() / 1000;
+            const totalLostHours = 60 + Math.floor(totalConventionalSeconds / 86400); // 60 hours behind plus 1 hour lost per day
+
+            // Calculate the total seconds for the MΣXII clock system, considering the offset
+            const adjustedTotalSeconds = totalConventionalSeconds - (totalLostHours * 3600);
+
+            // Calculate MΣXII clock time
+            const mexiiHours = Math.floor((adjustedTotalSeconds / (115 * 115)) % 23);
+            const mexiiRemainingSeconds = adjustedTotalSeconds % (115 * 115);
+            const mexiiMinutes = Math.floor(mexiiRemainingSeconds / 115);
+            const mexiiSeconds = Math.floor(mexiiRemainingSeconds % 115);
+
+            // Determine the period
+            let period;
+            if (mexiiHours < 7) {
+                period = "M.L";
+            } else if (mexiiHours < 14) {
+                period = "G.H";
+            } else if (mexiiHours < 21) {
+                period = "E.I.G";
+            } else {
+                period = "S.N";
+            }
+
+            // Format hours, minutes, and seconds with leading zeros
+            const hoursString = String(mexiiHours).padStart(2, '0');
+            const minutesString = String(mexiiMinutes).padStart(3, '0');
+            const secondsString = String(mexiiSeconds).padStart(3, '0');
+
+            // Display the MΣXII time with period indicator
+            document.getElementById('clock').textContent = `${hoursString}:${minutesString}:${secondsString} ${period}`;
+
+            // Update the calendar title with the current month and year
+            const year = now.getFullYear();
+            document.getElementById('calendar-title').textContent = `MΣXII 13 month calendar - July ${year}`;
+
+            // Highlight the current date on the MΣXII calendar with black color
+            const currentDate = now.getDate();
+            const table = document.getElementById('mexii-calendar');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent === String(currentDate)) {
+                        cells[j].classList.add('highlight-black');
+                    } else {
+                        cells[j].classList.remove('highlight-black');
+                    }
+                }
+            }
+
+            // Calculate progress for the energy bar every 6 hours and 45 minutes
+            const totalMEXIITime = mexiiHours * 115 * 115 + mexiiMinutes * 115 + mexiiSeconds;
+            const totalMEXIIHours = totalMEXIITime / (115 * 115);
+            const percentage = (totalMEXIIHours / 23) * 100;
+
+            // Update the energy bar width dynamically
+            const energyBar = document.getElementById('energy-bar');
+            energyBar.style.width = `${percentage}%`;
+            energyBar.textContent = `${Math.round(percentage)}%`;
+        }
+
+        // Update the clock and energy bar every second
+        setInterval(updateMEXIIClock, 1000);
+
+        // Initial call to display the clock and energy bar immediately
+        updateMEXIIClock();
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centered Text Example</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #centered-text {
+            background-color: #012;
+            color: #efe;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="centered-text">
+        MΣXII CLOCK IS 60:10:00 SLOWER THAN OUR TRADITIONAL CLOCK. MΣXII clock loose time  each day by: 00:010:400 equaling to 01:23:20 in our world.<br>
+        M.L = MORNING LIGHT 00 - 07 | G.H = GOLDEN HOUR 07 - 14 | E.I.G = EVE IS GOLDEN 14 - 21 | S.N = SILENT NIGHT 21 - 23. The MΣXII clock loses an hour daily compared to a traditional clock. Status bar is equivalent to one hour on the MΣXII clock.
+    </div>
+</body>
+</html> 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEXII CLOCK with Age Counter</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #efe;
+        }
+        #clock-container {
+            font-size: 1em;
+            background: #012;
+            color: #efe;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: fit-content;
+        }
+    </style>
+</head>
+<body>
+    <div id="clock-container">
+        <div id="clock">( Age:<span id="clock-age">019</span> )</div>
+    </div>
+
+    <script>
+        // Initialize age counter starting at 19
+        let age = 19;
+
+        // Function to update the clock
+        function updateClock() {
+            const now = new Date();
+
+            // Calculate total conventional seconds since epoch
+            const totalConventionalSeconds = now.getTime() / 1000;
+
+            // Adjust for the clock being 60 hours behind and losing an hour each day
+            const totalLostHours = 60 + Math.floor(totalConventionalSeconds / 86400);
+
+            // Calculate adjusted total seconds for MEXII time
+            const adjustedTotalSeconds = totalConventionalSeconds - (totalLostHours * 3600);
+
+            // Constants for MEXII time system
+            const mexiiDayInSeconds = 23 * 115 * 115;
+            const mexiiStartOffsetSeconds = 17 * 115 * 115;
+
+            // Calculate the number of MEXII days passed
+            const mexiiDaysPassed = Math.floor((adjustedTotalSeconds + mexiiStartOffsetSeconds) / mexiiDayInSeconds);
+
+            // Update the age based on the number of MEXII days passed
+            const newAge = 19 + mexiiDaysPassed;
+            document.getElementById('clock-age').textContent = newAge.toString().padStart(3, '0');
+        }
+
+        // Update the clock every second
+        setInterval(updateClock, 1000);
+
+        // Initial call to display the clock immediately
+        updateClock();
+    </script>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Screen</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .blur-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            z-index: 10000;
+            color: white;
+        }
+        .login-container input {
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            width: calc(100% - 22px);
+            border: none;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .login-container button {
+            padding: 10px;
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .login-container button:hover {
+            background: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+        .blurred-content {
+            filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <div id="blurred-content" class="blurred-content">
+        <!-- Your main content goes here -->
+    </div>
+    
+    <div class="blur-bg" id="login-screen">
+        <div class="login-container">
+            <h2>MΣ CODE:</h2>
+            <input type="password" id="password" placeholder="Enter Password">
+            <button onclick="checkPassword()">Login</button>
+        </div>
+    </div>
+
+    <script>
+        function checkPassword() {
+            const password = document.getElementById('password').value;
+            if (password === '1212') {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('blurred-content').classList.remove('blurred-content');
+            }
+        }
+    </script>
+</body>
+</html>
